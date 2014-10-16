@@ -1,0 +1,146 @@
+prtf - Highl level formatted text spooling interface
+
+Ever looked at the print sample in the toolkit? Ooops, very very complex
+and overkill for a simple printing task.
+
+Confronted with that problem, I found prtf.c, written by
+
+          Dimitri Vulis
+          67-67 Burns St., Apt. 4K
+          Forest Hills, NY 11375
+          Tel: 718-261-6839
+          Internet: DLV@DM.COM
+
+Thanks to Dimitri for his great code. I took it as a start and developped a
+high level interface to the Spooling functions.
+
+
+What you can do:
+
+
+- Print ASCII text (threaded oder synchronous).
+  You can print a whole file (with "FILE" or
+  lines (with PRINT_QUEUED).
+- Choose a
+  - font
+  - fontsize
+  - queue
+  - font attribs (italic, underscore, bold, outline, strikeout
+  - doctitle that appears as the icon text in the printer folder
+  - heading which will be printed on every page, together with a page number
+  - left margin
+  - how many blanks expand a tab
+
+invokation examples:
+
+Print c:\config.sys in a thread:
+
+prtf -d c:\config.sys -h "A Document Title"  -f Helf -p 10.0 -x  (open the printer folder)
+You will have to wait until the green arrow in the spooled document icon goes away.
+
+Print c:\config.sys synchronous:
+
+prtf -d c:\config.sys -h "A Document Title"  -f Helf -p 10.0 
+
+Print input entered through commandline:
+
+prtf  -h "A Document Title"  -f Helf -p 10.0
+You will be prompted:
+
+---> Doctitle   "Some Title" (open the printer object, the icon appears)
+---> enter text "easy spool is cool"
+---> exit
+
+If you invoke prtf  -h "A Document Title"  -f Helf -p 10.0 -x
+You will have to wait, until the green arrow for the spooled document goes
+away.
+
+Notes:
+
+Memory allocation (THREADED versus NOT_THREADED option)
+
+If you use the threaded option, you have to DosAllocMem the structures
+PRINTFILE and PRTFDAT.
+
+    SHORT             sRc;
+    PPRINTFILE        pPrtf;
+    PPRTFDAT          pPrtfDat;
+    PFATTRS           pFat;
+
+
+    if (sRc = DosAllocMem((VOID *) &pPrtf, (ULONG) sizeof(PRINTFILE),PAG_READ|PAG_WRITE|PAG_COMMIT))
+    {
+        sprintf(pszText,"Not enough memory. Request was %i bytes. Rc: %i",sizeof(PRINTFILE),sRc);
+        ProcMessageBox(pszText);
+        return(0);
+    }
+    if (sRc = DosAllocMem((VOID *) &pPrtfDat, (ULONG) sizeof(PRTFDAT),PAG_READ|PAG_WRITE|PAG_COMMIT))
+    {
+        sprintf(pszText,"Not enough memory. Request was %i bytes. Rc: %i",sizeof(PRTFDAT),sRc);
+        ProcMessageBox(pszText);
+        DosFreeMem(pPrtf);
+        return(0);
+    }
+
+If you supply the FATTRS structure (e.g. filled by the OS/2 font selection standard dialog)
+you will have to allocate the FATTRS structure too!
+
+    if (sRc = DosAllocMem((VOID *) &pFat, (ULONG) sizeof(PFATTRS),PAG_READ|PAG_WRITE|PAG_COMMIT))
+    {
+        sprintf(pszText,"Not enough memory. Request was %i bytes. Rc: %i",sizeof(PFATTRS),sRc);
+        ProcMessageBox(pszText);
+        DosFreeMem(pPrtf);
+        DosFreeMem(pPrtfDat);
+        return(0);
+    }
+
+The memory will be freed bye SplCloseDevice. (This is true even if there will occur an error).
+
+
+If you use the synchronous option (NOT_THREADED), simply declare the structures.
+PRINTFILE Prtf;
+PRTFDAT   PrtfDat;
+/* Optional */
+FATTRS    Fat;
+
+Prtf.pPrtfDat = &Prtf;
+/* Optional: */
+Prtf.pFat = &Fat;
+
+
+
+You have to fill in only this structure (see the example calls in prtf.c's main function)
+typedef struct PRINTFILE
+
+{
+  LONG     lFattrs;         /* FATTR_SEL_ITALIC, FATTR_SEL_UNDERSCORE, FATTR_SEL_STRIKEOUT, FATTR_SEL_OUTLINE */
+  CHAR     pszDocName[CCHMAXPATH];   /* e.g. c:\config.sys, set lAction = FILE */
+  CHAR     pszFaceName[CCHMAXPATH];  /* Font's face name, e.g. Helv, Courrier */
+  CHAR     pszQueueName[CCHMAXPATH]; /* Physical queue name (none = default queue) */
+  CHAR     pszSpoolerParms[CCHMAXPATH]; /* additional parameters to spooler */
+  CHAR     pszPrtTitle[CCHMAXPATH];  /* will appear on every new page, together with page number */
+  UCHAR    pszTextToPrint[MAX_INPUT_BUFFER]; /* in interactive mode, text to print, set lAction = PRINT_QUEUED */
+  CHAR     pszErrMsg[CCHMAXPATH * 2]; /* Contains the error messages (useful in PM programs) */
+  FIXED    fPointSize;                /* Point size of the font */
+  LONG     lCopies;                   /* number of copies, default is 1 */
+  LONG     lAction;                   /* either FILE or interactive in a squence OPEN, PRINT_QUEUED, CLOSE */
+  LONG     lLeftMargin;               /* left margin in number of blanks, set to 0 if no marin is wanted */
+  LONG     lTabExpand;                /* expand tabs to number of blanks. set to 0 if no expansion is wanted */
+  LONG     lUseFattrs;                /* TRUE or FALSE. If true, you have to do pPrtf->pFat = an allocated FATTRS strcture */
+                                      /* the strcture has to conatain meaningful values */
+  LONG     lThreaded;                 /* THREADED or NOT_THREADED. If threaded, DosAllocMem the structures!!!!!!!! */
+  LONG     lDone;                     /* in threaded mode,  you get a feedback here (as long as pPrtf is allocated.. */
+  PFATTRS  pFat;                      /* pointer to the FATTRS structure, if lUseFattrs is set to TRUE */
+  PPRTFDAT pPrtfDat;                  /* pointer (sorry, handle) to the internal PRTFDAT structure. Don't mess with it. */
+} PRINTFILE, * PPRINTFILE;
+
+
+You may distribute and use this version freely.
+Of course there is no warranty or liability!
+
+Markus Pfister
+Hankosoft
+Author of FF2.EXE the ultimate text search/repace tool for OS/2.
+100550,1100 on CompuServe.
+
+

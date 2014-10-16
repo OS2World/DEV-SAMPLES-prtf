@@ -1,0 +1,31 @@
+# IBM Developer's Workframe/2 Make File Creation run at 13:45:17 on 02/17/95
+
+# Make File Creation run in directory:
+#   D:\FF2\PRTF;
+
+# Assumed INCLUDE environment variable path:
+#   E:\TOOLKT21\C\OS2H;
+#   E:\TOOLKT21\CPLUS\OS2H;
+#   E:\IBMCPP\INCLUDE;
+#   E:\IBMCPP\IBMCLASS;
+#   E:\TOOLKT21\C\OS2H\VDD;
+#   E:\TOOLKT21\ASM\OS2INC;
+
+
+INCLUDE001=.
+INCLUDE001=$(INCLUDE001);$(INCLUDE)
+
+INCLUDE000=$(INCLUDE)
+
+
+PRTF.OBJ:  PRTF.C  \
+#  {$(INCLUDE000)}stdio.h  \
+#  {$(INCLUDE000)}stdlib.h  \
+#  {$(INCLUDE000)}string.h  \
+#  {$(INCLUDE000)}conio.h  \
+   {$(INCLUDE001)}pmprtf.h  \
+#    {$(INCLUDE000)}os2.h  \
+#    {$(INCLUDE000)}stdio.h  \
+#    {$(INCLUDE000)}stdlib.h  \
+#    {$(INCLUDE000)}string.h  \
+   MAKEFILE

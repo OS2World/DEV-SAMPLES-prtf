@@ -1,0 +1,28 @@
+# IBM Developer's Workframe/2 Make File Creation run at 13:45:17 on 02/17/95
+
+# Make File Creation run in directory:
+#   D:\FF2\PRTF;
+
+.SUFFIXES:
+
+.SUFFIXES: .c .cpp .cxx
+
+PRTF.EXE:  \
+  PRTF.OBJ \
+  MAKEFILE
+   ICC.EXE @<<
+ /B" /de /f /st:128000 /packd"
+ /Fe"PRTF.exe" 
+PRTF.OBJ
+<<
+
+{.}.c.obj:
+   ICC.EXE /Tdc /Sa /O /Gm /G4 /Gf /Gi /C   .\$*.c
+
+{.}.cpp.obj:
+   ICC.EXE /Tdc /Sa /O /Gm /G4 /Gf /Gi /C   .\$*.cpp
+
+{.}.cxx.obj:
+   ICC.EXE /Tdc /Sa /O /Gm /G4 /Gf /Gi /C   .\$*.cxx
+
+!include MAKEFILE.DEP
